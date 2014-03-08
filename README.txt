@@ -26,3 +26,15 @@ Sample hosts file:
 {
     "miner1": {"host": "192.168.0.4", "port": "1337"}
 }
+
+========== Running as a service =========
+
+Always run the program manually from the command line first to ensure all dependencies are met.
+
+In Debian-like systems:
+
+1. Copy valkyrie.init.d.sample to /etc/init.d/valkyrie.
+2. Copy config.json and hosts.json as described above to /etc/valkyrie.
+3. Run 'sudo update-rc.d valkyrie defaults' to set up the new service.
+4. Run 'sudo service valkyrie start' to start the service.
+5. Open '/etc/init.d/valkyrie' to view the service log.
