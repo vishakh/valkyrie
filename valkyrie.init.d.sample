@@ -1,0 +1,22 @@
+#! /bin/sh
+# Place in /etc/init.d/valkyrie
+# Using example from http://www.pietervanos.net/knowledge/start-python-script-from-init-d/
+ 
+case "$1" in
+  start)
+    echo "Starting Valkyrie"
+    # run application you want to start
+    python /usr/local/sbin/valkyrie.py /etc/valkyrie/config.json /etc/valkyrie/hosts.json > /var/log/valkyrie.log 2>&1 &
+    ;;
+  stop)
+    echo "Stopping Valkyrie"
+    # kill application you want to stop
+    killall python
+    ;;
+  *)
+    echo "Usage: /etc/init.d/valkyrie{start|stop}"
+    exit 1
+    ;;
+esac
+ 
+exit 0
