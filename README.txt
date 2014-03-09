@@ -33,8 +33,9 @@ Always run the program manually from the command line first to ensure all depend
 
 In Debian-like systems:
 
-1. Copy valkyrie.init.d.sample to /etc/init.d/valkyrie.
-2. Copy config.json and hosts.json as described above to /etc/valkyrie.
-3. Run 'sudo update-rc.d valkyrie defaults' to set up the new service.
-4. Run 'sudo service valkyrie start' to start the service.
-5. Open '/etc/init.d/valkyrie' to view the service log.
+1. Copy valkyrie.py to /usr/local/sbin/valkyrie.py
+2. Copy valkyrie.init.d.sample to /etc/init.d/valkyrie.
+3. Copy config.json and hosts.json as described above to /etc/valkyrie.
+4. Run 'sudo update-rc.d valkyrie defaults' to set up the new service.
+5. Run 'sudo service valkyrie start' to start the service.
+6. Open '/var/log/valkyrie.log' to view the service log.
