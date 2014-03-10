@@ -4,13 +4,16 @@
 # Written by Vishakh.
 # Based on open source code by etkeh <https://github.com/setkeh>
 
-import couchdb
 import datetime
 import json
 import logging
 import socket
+import subprocess
 import sys
 import time
+
+import couchdb
+
 
 def readHostsFile(filename):
     hosts = []
@@ -30,7 +33,10 @@ def readConfigFile(filename):
     couchdb_database = data['couchdb_database']
     socket_timeout = int(data['socket_timeout'])
     log_interval = int(data['log_interval'])
-    return couchdb_server, couchdb_database, socket_timeout, log_interval
+    temperature_script = None
+    if 'temperature_script' in data:
+        temperature_script = data['temperature_script']
+    return couchdb_server, couchdb_database, socket_timeout, log_interval, temperature_script
 
 def linesplit(socket):
     buffer = socket.recv(4096)
@@ -102,6 +108,18 @@ def runIteration():
             #pprint.pprint(currenthost)
             miners[name] = currenthost
 
+            temperature = None
+            try:
+                if temperature_script is not None:
+                    temperature = subprocess.check_output(temperature_script).strip()
+                    temperature = temperature.replace('\r', '').replace('\n', '')
+                else:
+                    log.info('Skipping temperature recording as no script is provided.')
+            except:
+                log.warn('Could not get farm temperature.')
+                e = sys.exc_info()[0]
+                log.info(e)
+
             # Cumulative statistics
             hashrate = summary['MHS 5s']
             total_hashrate += hashrate
@@ -114,7 +132,7 @@ def runIteration():
             log.info(e)
     record = {'_id': unix_time, 'unixtime': unix_time, 'utctime': utctime, 'total_hashrate': total_hashrate,
               'total_miners': total_miners,
-              'total_gpus': total_gpus, 'temperature': None, 'miners': miners}
+              'total_gpus': total_gpus, 'temperature': temperature, 'miners': miners}
     db[unix_time] = record
     db.commit()
     log.info('Done with iteration.')
@@ -133,7 +151,7 @@ config_file = sys.argv[1]
 hosts_file = sys.argv[2]
 
 hosts = readHostsFile(hosts_file)
-couchdb_server, couchdb_database, socket_timeout, log_interval = readConfigFile(config_file)
+couchdb_server, couchdb_database, socket_timeout, log_interval, temperature_script = readConfigFile(config_file)
 
 server = couchdb.Server(url=couchdb_server)
 db = server[couchdb_database]

@@ -7,10 +7,11 @@ e.g. valkyrie.py config.json hosts.json
 Sample config file:
 
 {
-    "couchdb_server":   "http://user:password@localhost:5984/",
-    "couchdb_database": "valkyrie",
-    "socket_timeout":   "30",
-    "log_interval":     "300"
+    "couchdb_server":       "http://user:password@localhost:5984/",
+    "couchdb_database":     "valkyrie",
+    "socket_timeout":       "30",
+    "log_interval":         "300"
+    "temperature_script":   "/path/to/temperature_test.py"
 }
 
 Variables:
@@ -19,6 +20,7 @@ couchdb_server      CouchDB server to connect to.
 couchdb_database    CouchDB database for recording data.
 socket_timeout      Miner socket timeout in seconds.
 log_interval        Interval in seconds between logging iterations.
+temperature_script  Path to a script that outputs (only) the room temperature.
 
 ========== Hosts Files =========
 Sample hosts file:
