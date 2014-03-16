@@ -1,3 +1,7 @@
+============================
+========== SERVER ==========
+============================
+
 How to run the program:
 
 valkyrie.py [config file] [hosts file]
@@ -41,3 +45,25 @@ In Debian-like systems:
 4. Run 'sudo update-rc.d valkyrie defaults' to set up the new service.
 5. Run 'sudo service valkyrie start' to start the service.
 6. Open '/var/log/valkyrie.log' to view the service log.
+
+============================
+========== CLIENT ==========
+============================
+
+The viewer relies on a CouchDB view called 'max_unixtime' in a design document called 'summary'.
+
+The map and reduce functions are:
+
+function(doc) {
+  emit(null, doc.unixtime);
+}
+
+function (key, values, rereduce) {
+    return Math.max.apply(null, values);
+}
+
+Once the above view is set up:
+1. Extract repo in the documents folder of a Python-enabled web server.
+2. Ensure config.json makes sense. This can be identical to the server config.json.
+3. Ensure all Python modules, e.g. json and mako, are installed.
+4. Open the URI corresponding to valkyrie_viewer.py in a web browser.

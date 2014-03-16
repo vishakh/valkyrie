@@ -2,6 +2,7 @@
 
 # Uploads Scrypt mining farm status to CouchDB database for detailed logging.
 # Written by Vishakh.
+# https://github.com/vishakh/valkyrie
 # Based on open source code by etkeh <https://github.com/setkeh>
 
 import datetime
