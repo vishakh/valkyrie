@@ -123,8 +123,6 @@
             <th>Miner</th>
             <th>OS</th>
             <th>GPUs</th>
-            <th>FPGAs</th>
-            <th>ASICs</th>
             <th>Strategy</th>
         </tr>
     % for minername in miners:
@@ -133,8 +131,6 @@
             <td>${minername}</td>
             <td>${config['OS']}</td>
             <td>${config['GPU Count']}</td>
-            <td>${config['PGA Count']}</td>
-            <td>${config['ASC Count']}</td>
             <td>${config['Strategy']}</td>
         </tr>
         %endfor
