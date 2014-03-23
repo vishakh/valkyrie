@@ -68,74 +68,80 @@ def makerpccall(api_command, api_ip, api_port):
 
 def runIteration():
     log.info('Running iteration')
-    utctime = str(datetime.datetime.utcnow())
-    unix_time = str(time.time())
-    miners = {}
-    total_hashrate = 0.0
-    total_miners = 0
-    total_gpus = 0
+    try:
+        utctime = str(datetime.datetime.utcnow())
+        unix_time = str(time.time())
+        miners = {}
+        total_hashrate = 0.0
+        total_miners = 0
+        total_gpus = 0
+        temperature = None
 
-    for host, port, name in hosts:
-        try:
-            log.info('Querying %s at %s:%s' % (name, host, port))
-
-            currenthost = {}
-
-            command = 'summary'
-            response = makerpccall([command], host, port)
-            summary = response['SUMMARY'][0]
-            currenthost[command] = summary
-
-            command = 'config'
-            response = makerpccall([command], host, port)
-            config = response['CONFIG']
-            currenthost[command] = config
-
-            command = 'pools'
-            response = makerpccall([command], host, port)
-            pools = response['POOLS']
-            currenthost[command] = pools
-
-            command = 'devs'
-            response = makerpccall([command], host, port)
-            devices = response['DEVS']
-            currenthost[command] = devices
-
-            command = 'coin'
-            response = makerpccall([command], host, port)
-            devdetails = response['COIN']
-            currenthost[command] = devdetails
-
-            #pprint.pprint(currenthost)
-            miners[name] = currenthost
-
-            temperature = None
+        for host, port, name in hosts:
             try:
-                if temperature_script is not None:
-                    temperature = subprocess.check_output(temperature_script).strip()
-                    temperature = temperature.replace('\r', '').replace('\n', '')
-                else:
-                    log.info('Skipping temperature recording as no script is provided.')
+                log.info('Querying %s at %s:%s' % (name, host, port))
+
+                currenthost = {}
+
+                command = 'summary'
+                response = makerpccall([command], host, port)
+                summary = response['SUMMARY'][0]
+                currenthost[command] = summary
+
+                command = 'config'
+                response = makerpccall([command], host, port)
+                config = response['CONFIG']
+                currenthost[command] = config
+
+                command = 'pools'
+                response = makerpccall([command], host, port)
+                pools = response['POOLS']
+                currenthost[command] = pools
+
+                command = 'devs'
+                response = makerpccall([command], host, port)
+                devices = response['DEVS']
+                currenthost[command] = devices
+
+                command = 'coin'
+                response = makerpccall([command], host, port)
+                devdetails = response['COIN']
+                currenthost[command] = devdetails
+
+                #pprint.pprint(currenthost)
+                miners[name] = currenthost
+
+                temperature = None
+                try:
+                    if temperature_script is not None:
+                        temperature = subprocess.check_output(temperature_script).strip()
+                        temperature = temperature.replace('\r', '').replace('\n', '')
+                    else:
+                        log.info('Skipping temperature recording as no script is provided.')
+                except:
+                    log.warn('Could not get farm temperature.')
+                    e = sys.exc_info()[0]
+                    log.info(e)
+
+                # Cumulative statistics
+                hashrate = summary['MHS 5s']
+                total_hashrate += hashrate
+                total_miners += 1
+                gpus = len(devices)
+                total_gpus += gpus
             except:
-                log.warn('Could not get farm temperature.')
+                log.error("Could not fetch data from host " + name + " at host " + host + " and port " + port)
                 e = sys.exc_info()[0]
                 log.info(e)
-
-            # Cumulative statistics
-            hashrate = summary['MHS 5s']
-            total_hashrate += hashrate
-            total_miners += 1
-            gpus = len(devices)
-            total_gpus += gpus
-        except:
-            log.error("Could not fetch data from host " + name + " at host " + host + " and port " + port)
-            e = sys.exc_info()[0]
-            log.info(e)
-    record = {'_id': unix_time, 'unixtime': unix_time, 'utctime': utctime, 'total_hashrate': total_hashrate,
-              'total_miners': total_miners,
-              'total_gpus': total_gpus, 'temperature': temperature, 'miners': miners}
-    db[unix_time] = record
-    db.commit()
+        record = {'_id': unix_time, 'unixtime': unix_time, 'utctime': utctime, 'total_hashrate': total_hashrate,
+                  'total_miners': total_miners,
+                  'total_gpus': total_gpus, 'temperature': temperature, 'miners': miners}
+        db[unix_time] = record
+        db.commit()
+    except:
+        log.error("Error during iteration")
+        e = sys.exc_info()[0]
+        log.info(e)
     log.info('Done with iteration.')
 
 
