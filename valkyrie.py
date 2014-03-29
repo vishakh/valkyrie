@@ -66,6 +66,28 @@ def makerpccall(api_command, api_ip, api_port):
     s.close()
     return resp
 
+
+def tryDBConnect():
+    server = couchdb.Server(url=couchdb_server)
+    db = server[couchdb_database]
+    return db, server
+
+
+def connectToDB():
+    log.info("Connecting to DB.")
+    while True:
+        try:
+            db, server = tryDBConnect()
+            log.info("DB connect successful.")
+            return server, db
+        except:
+            e = sys.exc_info()[0]
+            log.error("Could not connect to DB.")
+            log.info(e)
+            log.info("Will retry after sleep..")
+            time.sleep(log_interval)
+
+
 def runIteration():
     log.info('Running iteration')
     try:
@@ -108,7 +130,6 @@ def runIteration():
                 devdetails = response['COIN']
                 currenthost[command] = devdetails
 
-                #pprint.pprint(currenthost)
                 miners[name] = currenthost
 
                 temperature = None
@@ -125,27 +146,30 @@ def runIteration():
 
                 # Cumulative statistics
                 hashrate = summary['MHS 5s']
+                if (type(hashrate) == str or type(hashrate) is None) and ('E' in hashrate or 'e' in hashrate):
+                    hashrate = float(hashrate[:-1])/10
                 total_hashrate += hashrate
                 total_miners += 1
                 gpus = len(devices)
                 total_gpus += gpus
             except:
                 log.error("Could not fetch data from host " + name + " at host " + host + " and port " + port)
-                e = sys.exc_info()[0]
+                e = sys.exc_info()
                 log.info(e)
         record = {'_id': unix_time, 'unixtime': unix_time, 'utctime': utctime, 'total_hashrate': total_hashrate,
                   'total_miners': total_miners,
                   'total_gpus': total_gpus, 'temperature': temperature, 'miners': miners}
-        db[unix_time] = record
-        db.commit()
+        try:
+            db[unix_time] = record
+            db.commit()
+        except:
+            log.warn('Could not write to database. Attempting to reconnect for next iteration..')
+            connectToDB()
     except:
+        e = sys.exc_info()
         log.error("Error during iteration")
-        e = sys.exc_info()[0]
-        log.info(e)
+        logging.exception(e)
     log.info('Done with iteration.')
-
-
-
 
 
 log = logging.getLogger('Valkyrie')
@@ -160,8 +184,8 @@ hosts_file = sys.argv[2]
 hosts = readHostsFile(hosts_file)
 couchdb_server, couchdb_database, socket_timeout, log_interval, temperature_script = readConfigFile(config_file)
 
-server = couchdb.Server(url=couchdb_server)
-db = server[couchdb_database]
+
+server, db = connectToDB()
 
 while True:
     runIteration()

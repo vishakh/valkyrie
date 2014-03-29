@@ -30,7 +30,7 @@
             <th>Miner</th>
             <th>Device</th>
             <th>Status</th>
-            <th>Hashrate (MH/s)</th>
+            <th>Hashrate (KH/s)</th>
             <th>Temperature</th>
             <th>Fan %</th>
             <th>Intensity</th>
@@ -44,11 +44,12 @@
         </tr>
     % for minername in miners:
         %for dev in miners[minername]['devs']:
+            <% dev_hashrate = dev['MHS 5s'] * 1000 %>
         <tr>
             <td>${minername}</td>
             <td>Dev ${dev['GPU']}</td>
             <td>${dev['Status']}</td>
-            <td>${dev['MHS 5s']}</td>
+            <td>${dev_hashrate}</td>
             <td>${dev['Temperature']}</td>
             <td>${dev['Fan Percent']}</td>
             <td>${dev['Intensity']}</td>
